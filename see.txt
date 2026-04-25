@@ -1,0 +1,272 @@
+Act as a World Best Prompt Engineer.
+
+high-converting landing page using emergent give an Multiple Theme Prompt
+
+We don’t promise overnight results—but we build systems that consistently improve your patient flow over time
+
+
+--------------------------------------------------------------------------------------------
+it will work when new row add only new add email will get the message-----------------------
+function onNewRowAdded(e) {
+  // ---- CONFIGURE THESE ----
+  const EMAIL_COLUMN = 1;        // Column number where email is stored (e.g., 3 = Column C)
+  const NAME_COLUMN = 2;         // Column number for the member's name (e.g., 1 = Column A)
+  const SHEET_NAME = "Sheet1";   // Your sheet tab name
+  // -------------------------
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+  const newRow = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  const email = newRow[EMAIL_COLUMN - 1];
+  const name = newRow[NAME_COLUMN - 1] || "Member";
+
+  if (!email || !email.includes("@")) return; // Skip if no valid email
+
+  const subject = `Welcome, ${name}! 🎉`;
+  const message = `Hi ${name},\n\nWelcome! We're thrilled to have you on board.\n\nIf you have any questions, feel free to reply to this email.\n\nBest regards,\nYour Team`;
+
+  GmailApp.sendEmail(email, subject, message);
+  Logger.log(`Email sent to: ${email}`);
+}
+
+// This function sets up the trigger to watch for new rows
+function createTrigger() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ScriptApp.newTrigger("onNewRowAdded")
+    .forSpreadsheet(ss)
+    .onChange()
+    .create();
+}
+
+
+GOOGLE SHEET 
+EMAIL_COLUMN	NAME_COLUMN
+
+SHEET NAME - Sheet1
+
+
+--------------------------------------------------------------------------------------------------------
+AGAR MULTIPLE ROWS ADD HO GAI EK SATH UNN SABHI PAR MESSAGE CHAHIYE JAYEGA
+function onNewRowAdded(e) {
+  const EMAIL_COLUMN = 1;
+  const NAME_COLUMN = 2;
+  const SHEET_NAME = "Sheet1";
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+
+  // Track karo pehle kitni rows thi
+  const props = PropertiesService.getScriptProperties();
+  const prevLastRow = parseInt(props.getProperty("lastRow") || "1");
+
+  // Agar koi nai row nahi aayi toh skip karo
+  if (lastRow <= prevLastRow) {
+    props.setProperty("lastRow", lastRow.toString());
+    return;
+  }
+
+  // Saari nayi rows ko email bhejo
+  for (let i = prevLastRow + 1; i <= lastRow; i++) {
+    const row = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const email = row[EMAIL_COLUMN - 1];
+    const name = row[NAME_COLUMN - 1] || "Member";
+
+    if (!email || !email.includes("@")) continue;
+
+    const subject = `Welcome, ${name}! 🎉`;
+    const message = `Hi ${name},\n\nWelcome! We're thrilled to have you on board.\n\nBest regards,\nYour Team`;
+
+    GmailApp.sendEmail(email, subject, message);
+    Logger.log(`Email sent to: ${email}`);
+  }
+
+  // Update karo last row count
+  props.setProperty("lastRow", lastRow.toString());
+}
+
+
+----------------------------------------------------------------------------------------------------------------------
+New Row Aye toh apko email ayee hai uss usko bhi message jayee 
+function onNewRowAdded(e) {
+  const EMAIL_COLUMN = 1;
+  const NAME_COLUMN = 2;
+  const SHEET_NAME = "Sheet1";
+  const ADMIN_EMAIL = "sahutanishq341@gmail.com"; // 👈 Yahan apni email daalo
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+
+  const props = PropertiesService.getScriptProperties();
+  const prevLastRow = parseInt(props.getProperty("lastRow") || "1");
+
+  if (lastRow <= prevLastRow) {
+    props.setProperty("lastRow", lastRow.toString());
+    return;
+  }
+
+  for (let i = prevLastRow + 1; i <= lastRow; i++) {
+    const row = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const email = row[EMAIL_COLUMN - 1];
+    const name = row[NAME_COLUMN - 1] || "Member";
+
+    if (!email || !email.includes("@")) continue;
+
+    // Member ko welcome email
+    const subject = `Welcome, ${name}! 🎉`;
+    const message = `Hi ${name},\n\nWelcome! We're thrilled to have you on board.\n\nBest regards,\nYour Team`;
+    GmailApp.sendEmail(email, subject, message);
+
+    // Admin ko notification
+    GmailApp.sendEmail(
+      ADMIN_EMAIL,
+      `🔔 New Member Added: ${name}`,
+      `Ek naya member join kiya hai!\n\nName: ${name}\nEmail: ${email}\nRow: ${i}\nTime: ${new Date()}`
+    );
+
+    Logger.log(`Email sent to: ${email}`);
+  }
+
+  props.setProperty("lastRow", lastRow.toString());
+}
+
+-----------------------------------------------------------------------------------------------------------------------
+Mobile Par SMS JAYEGA 
+
+Step 1: Fast2SMS Account banao
+
+Jao fast2sms.com
+Register karo (free hai)
+Login karo → Dev API section mein jao
+Apna API Key copy karo
+
+
+Step 2: Sheet mein Phone Column add karo
+Aapki sheet mein ek Column C add karo phone number ke liye:
+A (EMAIL)B (NAME)C (PHONE)email@gmail.comTansihq9876543210
+
+Step 3: Updated Script
+javascriptfunction onNewRowAdded(e) {
+  const EMAIL_COLUMN = 1;
+  const NAME_COLUMN = 2;
+  const PHONE_COLUMN = 3;        // 👈 Column C
+  const SHEET_NAME = "Sheet1";
+  const ADMIN_EMAIL = "aapki@email.com";
+  const FAST2SMS_API_KEY = "xxxxx"; // 👈 Apna Fast2SMS API key daalo
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+
+  const props = PropertiesService.getScriptProperties();
+  const prevLastRow = parseInt(props.getProperty("lastRow") || "1");
+
+  if (lastRow <= prevLastRow) {
+    props.setProperty("lastRow", lastRow.toString());
+    return;
+  }
+
+  for (let i = prevLastRow + 1; i <= lastRow; i++) {
+    const row = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const email = row[EMAIL_COLUMN - 1];
+    const name = row[NAME_COLUMN - 1] || "Member";
+    const phone = row[PHONE_COLUMN - 1].toString().trim();
+
+    if (!email || !email.includes("@")) continue;
+
+    // ✅ Member ko welcome email
+    GmailApp.sendEmail(
+      email,
+      `Welcome, ${name}! 🎉`,
+      `Hi ${name},\n\nWelcome! We're thrilled to have you on board.\n\nBest regards,\nYour Team`
+    );
+
+    // ✅ Admin ko notification email
+    GmailApp.sendEmail(
+      ADMIN_EMAIL,
+      `🔔 New Member Added: ${name}`,
+      `Ek naya member join kiya hai!\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nRow: ${i}\nTime: ${new Date()}`
+    );
+
+    // ✅ Member ko SMS via Fast2SMS
+    if (phone && phone.length === 10) {
+      const smsMessage = `Hi ${name}, Welcome! We're thrilled to have you on board.`;
+      const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${FAST2SMS_API_KEY}&route=q&message=${encodeURIComponent(smsMessage)}&language=english&flash=0&numbers=${phone}`;
+      
+      const response = UrlFetchApp.fetch(url, { method: "GET", muteHttpExceptions: true });
+      Logger.log(`SMS Response: ${response.getContentText()}`);
+    }
+
+    Logger.log(`Done for: ${name}`);
+  }
+
+  props.setProperty("lastRow", lastRow.toString());
+}
+
+Step 4: 2 cheezein update karo
+VariableKya daalna haiADMIN_EMAILApni emailFAST2SMS_API_KEYFast2SMS ka API key
+
+Step 5: Fast2SMS API Key kahan milega?
+
+fast2sms.com → Login
+Left sidebar → Dev API
+API key copy karo 👇
+
+
+-------------------------------------------------------------------------------------------------------------------------
+Mobile par bhi sms jayega and gmail par bhi and admin ko bhi jayega gmail new member add hua hai 
+
+function onNewRowAdded(e) {
+  const EMAIL_COLUMN = 1;
+  const NAME_COLUMN = 2;
+  const PHONE_COLUMN = 3;        // 👈 Column C
+  const SHEET_NAME = "Sheet1";
+  const ADMIN_EMAIL = "sahutanishq341@gmail.com";
+  const FAST2SMS_API_KEY = "IOY2pJaPvRuWwXmzVNAicEQFbL1MyH5k8l90Gh4gKeUxB3ZnCDx2L3cHnKpZUq84lmWJwud5VyMbsaQh"; // 👈 Apna Fast2SMS API key daalo
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+
+  const props = PropertiesService.getScriptProperties();
+  const prevLastRow = parseInt(props.getProperty("lastRow") || "1");
+
+  if (lastRow <= prevLastRow) {
+    props.setProperty("lastRow", lastRow.toString());
+    return;
+  }
+
+  for (let i = prevLastRow + 1; i <= lastRow; i++) {
+    const row = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const email = row[EMAIL_COLUMN - 1];
+    const name = row[NAME_COLUMN - 1] || "Member";
+    const phone = row[PHONE_COLUMN - 1].toString().trim();
+
+    if (!email || !email.includes("@")) continue;
+
+    // ✅ Member ko welcome email
+    GmailApp.sendEmail(
+      email,
+      `Welcome, ${name}! 🎉`,
+      `Hi ${name},\n\nWelcome! We're thrilled to have you on board.\n\nBest regards,\nYour Team`
+    );
+
+    // ✅ Admin ko notification email
+    GmailApp.sendEmail(
+      ADMIN_EMAIL,
+      `🔔 New Member Added: ${name}`,
+      `Ek naya member join kiya hai!\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nRow: ${i}\nTime: ${new Date()}`
+    );
+
+    // ✅ Member ko SMS via Fast2SMS
+    if (phone && phone.length === 10) {
+      const smsMessage = `Hi ${name}, Welcome! We're thrilled to have you on board.`;
+      const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${FAST2SMS_API_KEY}&route=q&message=${encodeURIComponent(smsMessage)}&language=english&flash=0&numbers=${phone}`;
+      
+      const response = UrlFetchApp.fetch(url, { method: "GET", muteHttpExceptions: true });
+      Logger.log(`SMS Response: ${response.getContentText()}`);
+    }
+
+    Logger.log(`Done for: ${name}`);
+  }
+
+  props.setProperty("lastRow", lastRow.toString());
+}

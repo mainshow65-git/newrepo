@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClinicFlow — Patient Growth OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:ital,wght@0,200;0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --neon:#00ffe7;
+  --neon2:#0066ff;
+  --neon3:#ff2d78;
+  --bg:#020812;
+  --bg2:#040e20;
+  --bg3:#05122b;
+  --text:#e8f4ff;
+  --muted:#4a6a8a;
+  --card:rgba(5,18,43,0.85);
+  --head:'Orbitron',monospace;
+  --body:'Exo 2',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.7;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.5}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;background:rgba(2,8,18,0.75);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,255,231,0.1)}
+.logo{font-family:var(--head);font-size:1.05rem;font-weight:900;color:var(--text);letter-spacing:0.08em;display:flex;align-items:center;gap:0.55rem}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 8px var(--neon),0 0 20px var(--neon);animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+.logo em{color:var(--neon);font-style:normal}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-link{font-family:var(--head);font-size:0.6rem;font-weight:600;letter-spacing:0.12em;color:var(--muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-link:hover{color:var(--neon)}
+.nav-cta{font-family:var(--head);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.5rem 1.2rem;background:transparent;border:1px solid var(--neon);color:var(--neon);text-decoration:none;border-radius:2px;position:relative;overflow:hidden;transition:color .25s}
+.nav-cta::before{content:'';position:absolute;inset:0;background:var(--neon);transform:translateX(-101%);transition:transform .25s ease}
+.nav-cta:hover::before{transform:translateX(0)}
+.nav-cta:hover{color:#020812}
+.nav-cta span{position:relative;z-index:1}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:22px;height:1.5px;background:var(--neon)}
+
+/* MOBILE MENU */
+.mmenu{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,8,18,0.98);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem}
+.mmenu.open{display:flex}
+.mmenu a{font-family:var(--head);font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);text-decoration:none;transition:color .2s}
+.mmenu a:hover{color:var(--neon)}
+.mclose{position:absolute;top:1.5rem;right:1.5rem;font-size:1.8rem;color:var(--neon);cursor:pointer;background:none;border:none;font-family:var(--head);line-height:1}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 1.5rem 5rem;position:relative;z-index:2}
+.hcorner{position:absolute;width:50px;height:50px;border-color:rgba(0,255,231,0.4);border-style:solid}
+.hcorner.tl{top:12%;left:4%;border-width:1.5px 0 0 1.5px}
+.hcorner.tr{top:12%;right:4%;border-width:1.5px 1.5px 0 0}
+.hcorner.bl{bottom:8%;left:4%;border-width:0 0 1.5px 1.5px}
+.hcorner.br{bottom:8%;right:4%;border-width:0 1.5px 1.5px 0}
+.badge{display:inline-flex;align-items:center;gap:0.55rem;border:1px solid rgba(0,255,231,0.28);border-radius:2px;padding:0.38rem 1rem;font-family:var(--head);font-size:0.58rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--neon);margin-bottom:2rem}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 6px var(--neon);animation:blink 1.5s infinite;flex-shrink:0}
+.hero h1{font-family:var(--head);font-size:clamp(1.9rem,5vw,3.8rem);font-weight:900;line-height:1.06;letter-spacing:-0.01em;color:var(--text);max-width:820px;margin-bottom:1.5rem;animation:glitch 9s infinite}
+@keyframes glitch{0%,94%{text-shadow:0 0 40px rgba(0,255,231,0.12)}95%{text-shadow:3px 0 0 rgba(255,45,120,0.5),-3px 0 0 rgba(0,102,255,0.5)}96%{text-shadow:0 0 40px rgba(0,255,231,0.12)}98%{text-shadow:-2px 0 0 rgba(255,45,120,0.35),2px 0 0 rgba(0,102,255,0.35)}100%{text-shadow:0 0 40px rgba(0,255,231,0.12)}}
+.hl{color:var(--neon);text-shadow:0 0 20px rgba(0,255,231,0.55),0 0 60px rgba(0,255,231,0.18)}
+.hero-sub{font-size:clamp(0.93rem,1.8vw,1.08rem);color:var(--muted);max-width:530px;margin:0 auto 2.8rem;font-weight:300;line-height:1.9}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3.5rem}
+.btn-p{font-family:var(--head);font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.95rem 2rem;background:var(--neon);color:#020812;text-decoration:none;border-radius:2px;display:inline-flex;align-items:center;gap:0.55rem;box-shadow:0 0 25px rgba(0,255,231,0.38),0 0 60px rgba(0,255,231,0.12);transition:box-shadow .2s,transform .2s}
+.btn-p:hover{box-shadow:0 0 40px rgba(0,255,231,0.65),0 0 80px rgba(0,255,231,0.25);transform:translateY(-2px)}
+.btn-o{font-family:var(--head);font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.95rem 2rem;background:transparent;color:var(--text);text-decoration:none;border-radius:2px;border:1px solid rgba(255,255,255,0.18);display:inline-flex;align-items:center;gap:0.55rem;transition:border-color .2s,color .2s}
+.btn-o:hover{border-color:var(--neon);color:var(--neon)}
+.hstats{display:flex;gap:3rem;flex-wrap:wrap;justify-content:center}
+.hs{text-align:center}
+.hs-n{font-family:var(--head);font-size:1.75rem;font-weight:900;color:var(--neon);display:block;line-height:1;text-shadow:0 0 14px rgba(0,255,231,0.45)}
+.hs-l{font-size:0.68rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.3rem;display:block}
+
+/* COMMON */
+section{padding:6rem 1.5rem;position:relative;z-index:2}
+.wrap{max-width:1080px;margin:0 auto}
+.slabel{font-family:var(--head);font-size:0.58rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--neon);margin-bottom:0.7rem;display:flex;align-items:center;gap:0.6rem}
+.slabel::before{content:'';width:18px;height:1px;background:var(--neon);box-shadow:0 0 4px var(--neon)}
+.stitle{font-family:var(--head);font-size:clamp(1.55rem,3.5vw,2.55rem);font-weight:900;line-height:1.1;letter-spacing:-0.01em;color:var(--text);margin-bottom:1rem}
+.ssub{font-size:1rem;color:var(--muted);font-weight:300;max-width:540px;line-height:1.85}
+
+/* HUD CARD */
+.hc{background:var(--card);border:1px solid rgba(0,255,231,0.1);border-radius:3px;position:relative;overflow:hidden;backdrop-filter:blur(12px);transition:border-color .3s,transform .3s}
+.hc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--neon),transparent);opacity:0;transition:opacity .3s}
+.hc:hover{border-color:rgba(0,255,231,0.32);transform:translateY(-4px)}
+.hc:hover::before{opacity:1}
+.cc{position:absolute;width:10px;height:10px;border-color:var(--neon);border-style:solid;opacity:0.45}
+.cc.tl{top:6px;left:6px;border-width:1px 0 0 1px}
+.cc.br{bottom:6px;right:6px;border-width:0 1px 1px 0}
+
+/* PROBLEM */
+.prob-sec{background:var(--bg2)}
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.2rem;margin-top:3rem}
+.prob-card{padding:1.75rem;border-left:2px solid rgba(255,45,120,0.38)}
+.prob-ico{font-size:1.5rem;margin-bottom:1rem;display:block;filter:drop-shadow(0 0 8px rgba(255,45,120,0.45))}
+.prob-card h3{font-family:var(--head);font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:0.45rem;letter-spacing:0.03em}
+.prob-card p{font-size:0.85rem;color:var(--muted);font-weight:300}
+
+/* SOLUTION */
+.sol-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:start;margin-top:3.5rem}
+.sol-list{display:flex;flex-direction:column;gap:1rem}
+.sol-item{display:flex;align-items:flex-start;gap:1rem;padding:1.2rem 1.4rem}
+.sol-n{font-family:var(--head);font-size:0.68rem;font-weight:900;color:var(--neon);min-width:26px;text-shadow:0 0 8px rgba(0,255,231,0.5)}
+.sol-item h4{font-family:var(--head);font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:0.3rem;letter-spacing:0.02em}
+.sol-item p{font-size:0.83rem;color:var(--muted);font-weight:300}
+.sys-diag{padding:0}
+.sys-hdr{padding:0.9rem 1.4rem;border-bottom:1px solid rgba(0,255,231,0.1);display:flex;align-items:center;gap:0.55rem}
+.sdot{width:8px;height:8px;border-radius:50%}
+.sdot.r{background:#ff2d78;box-shadow:0 0 5px #ff2d78}
+.sdot.y{background:#ffcc00;box-shadow:0 0 5px #ffcc00}
+.sdot.g{background:var(--neon);box-shadow:0 0 5px var(--neon);animation:blink 2s infinite}
+.sys-ttl{font-family:var(--head);font-size:0.55rem;color:var(--muted);letter-spacing:0.1em;margin-left:auto}
+.sys-bdy{padding:1.4rem}
+.sys-row{display:flex;align-items:center;gap:0.9rem;margin-bottom:0.6rem}
+.sys-row:last-child{margin-bottom:0}
+.stag{font-family:var(--head);font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.28rem 0.6rem;border-radius:2px;min-width:68px;text-align:center}
+.stag.a{background:rgba(0,102,255,0.15);color:#4d94ff;border:1px solid rgba(0,102,255,0.28)}
+.stag.c{background:rgba(0,255,231,0.09);color:var(--neon);border:1px solid rgba(0,255,231,0.22)}
+.stag.f{background:rgba(255,45,120,0.1);color:#ff6b9d;border:1px solid rgba(255,45,120,0.22)}
+.stag.o{background:rgba(255,204,0,0.1);color:#ffcc00;border:1px solid rgba(255,204,0,0.22)}
+.sbar-w{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:1px;overflow:hidden}
+.sbar{height:100%;border-radius:1px;width:0;transition:width 1.5s ease}
+.sbar.b1{background:linear-gradient(90deg,#0066ff,#00aaff)}
+.sbar.b2{background:linear-gradient(90deg,var(--neon),#00aaa0)}
+.sbar.b3{background:linear-gradient(90deg,#ff2d78,#ff6b6b)}
+.sbar.b4{background:linear-gradient(90deg,#ffcc00,#ff9900)}
+.spct{font-family:var(--head);font-size:0.58rem;color:var(--muted);min-width:26px;text-align:right}
+.sys-note{margin-top:1.2rem;padding:0.9rem 1.1rem;background:rgba(0,255,231,0.04);border:1px solid rgba(0,255,231,0.14);border-radius:2px;font-size:0.8rem;color:var(--neon);font-style:italic;font-weight:300;text-align:center}
+.inline-stats{margin-top:1.25rem;border-top:1px solid rgba(0,255,231,0.1);padding-top:1.1rem}
+.irow{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.55rem}
+.irow:last-child{margin-bottom:0}
+.ikey{font-family:var(--head);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em}
+.ival{font-family:var(--head);font-size:0.95rem}
+.ival.g{color:var(--neon);text-shadow:0 0 8px rgba(0,255,231,0.45)}
+.ival.b{color:#4d94ff}
+.ival.y{color:#ffcc00}
+
+/* HOW */
+.how-sec{background:var(--bg3)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0;margin-top:3.5rem;position:relative}
+.step-line{position:absolute;top:2.4rem;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 4%,rgba(0,255,231,0.18) 18%,rgba(0,255,231,0.18) 82%,transparent 96%);pointer-events:none}
+.step{padding:0 1.25rem 2rem;text-align:center}
+.step-hex{width:50px;height:50px;margin:0 auto 1.2rem;position:relative;display:flex;align-items:center;justify-content:center}
+.step-hex svg{position:absolute;inset:0;width:100%;height:100%}
+.step-hex-n{font-family:var(--head);font-size:0.95rem;font-weight:900;color:var(--neon);position:relative;z-index:1}
+.step h3{font-family:var(--head);font-size:0.75rem;font-weight:700;color:var(--text);margin-bottom:0.55rem;letter-spacing:0.04em;text-transform:uppercase}
+.step p{font-size:0.8rem;color:var(--muted);font-weight:300}
+.disclaimer{margin-top:3rem;padding:1.4rem 1.8rem;background:rgba(0,255,231,0.03);border:1px solid rgba(0,255,231,0.12);border-left:2px solid var(--neon);border-radius:2px;font-size:0.85rem;color:var(--muted);font-style:italic;font-weight:300;display:flex;gap:0.9rem;align-items:flex-start}
+.disclaimer strong{color:var(--text);font-style:normal}
+
+/* RESULTS */
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:1.2rem;margin-top:3rem}
+.res-card{padding:1.75rem}
+.res-bar{height:2px;background:linear-gradient(90deg,var(--neon2),var(--neon));margin-bottom:1.4rem;border-radius:1px;box-shadow:0 0 7px rgba(0,255,231,0.35)}
+.res-ico{font-size:1.35rem;margin-bottom:0.7rem;display:block}
+.res-card h3{font-family:var(--head);font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:0.45rem;letter-spacing:0.03em}
+.res-card p{font-size:0.83rem;color:var(--muted);font-weight:300}
+
+/* TRUST */
+.trust-sec{background:var(--bg2)}
+.trust-lay{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;margin-top:3rem}
+.tq-wrap{border-left:2px solid var(--neon);padding-left:2rem;position:relative}
+.tq-wrap::before{content:'"';font-family:var(--head);font-size:4.5rem;font-weight:900;color:var(--neon);opacity:0.1;position:absolute;top:-1.2rem;left:0.8rem;line-height:1}
+.tquote{font-size:1.05rem;font-weight:300;color:var(--text);line-height:1.9;font-style:italic}
+.tbadge{display:inline-flex;align-items:center;gap:0.45rem;font-family:var(--head);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--neon);margin-top:1.4rem;padding:0.38rem 0.75rem;border:1px solid rgba(0,255,231,0.22);border-radius:2px}
+.tpts{display:flex;flex-direction:column;gap:0.85rem}
+.tp{display:flex;align-items:flex-start;gap:0.9rem;padding:0.9rem 1.1rem;border-left:1px solid rgba(0,255,231,0.1);transition:border-color .2s}
+.tp:hover{border-color:rgba(0,255,231,0.38)}
+.tpdot{width:5px;height:5px;border-radius:50%;background:var(--neon);flex-shrink:0;margin-top:8px;box-shadow:0 0 5px var(--neon)}
+.tp p{font-size:0.84rem;color:var(--muted);font-weight:300;line-height:1.6}
+.tp strong{color:var(--text)}
+
+/* CTA */
+.cta-sec{text-align:center;padding:7rem 1.5rem;position:relative;overflow:hidden}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(0,255,231,0.07) 0%,transparent 70%);pointer-events:none}
+.cta-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,255,231,0.06);top:50%;left:50%;transform:translate(-50%,-50%);animation:expand 7s infinite}
+.cta-ring:nth-child(2){width:380px;height:380px;animation-delay:2.3s}
+.cta-ring:nth-child(3){width:560px;height:560px;animation-delay:4.6s}
+@keyframes expand{0%{opacity:0.4;transform:translate(-50%,-50%) scale(0.75)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)}}
+.cta-sec .slabel{justify-content:center}
+.cta-sec .stitle{max-width:700px;margin:0 auto 1rem}
+.cta-sec .ssub{margin:0 auto 2.5rem;max-width:490px}
+.cta-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.btn-wa{font-family:var(--head);font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.95rem 2rem;background:#25d366;color:#fff;text-decoration:none;border-radius:2px;display:inline-flex;align-items:center;gap:0.55rem;box-shadow:0 0 20px rgba(37,211,102,0.28);transition:box-shadow .2s,transform .2s}
+.btn-wa:hover{box-shadow:0 0 35px rgba(37,211,102,0.52);transform:translateY(-2px)}
+
+/* FOOTER */
+footer{border-top:1px solid rgba(0,255,231,0.08);padding:2rem 1.5rem;text-align:center;font-size:0.72rem;color:var(--muted);position:relative;z-index:2;font-family:var(--head);letter-spacing:0.05em}
+.f-logo{display:inline-flex;align-items:center;gap:0.45rem;font-size:0.9rem;margin-bottom:0.4rem}
+
+/* ANIMATE */
+.fu{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.fu.vis{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .nav-link{display:none}
+  .nav-cta{display:none}
+  .hamburger{display:flex}
+  .sol-grid{grid-template-columns:1fr;gap:2rem}
+  .trust-lay{grid-template-columns:1fr;gap:2.5rem}
+  .step-line{display:none}
+  .hcorner{display:none}
+}
+@media(max-width:600px){
+  nav{padding:.8rem 1.2rem}
+  section{padding:4rem 1.2rem}
+  .hero{padding:6rem 1.2rem 4rem}
+  .hero h1{font-size:1.8rem}
+  .hero-btns,.cta-btns{flex-direction:column;align-items:stretch}
+  .btn-p,.btn-o,.btn-wa{justify-content:center}
+  .hstats{gap:1.8rem}
+  .hs-n{font-size:1.4rem}
+  .steps{grid-template-columns:1fr 1fr}
+  .cta-ring{display:none}
+}
+@media(max-width:380px){
+  .steps{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- MOBILE MENU -->
+<div class="mmenu" id="mm">
+  <button class="mclose" onclick="tmm()">✕</button>
+  <a href="#problem" onclick="tmm()">Problem</a>
+  <a href="#solution" onclick="tmm()">Solution</a>
+  <a href="#how" onclick="tmm()">Process</a>
+  <a href="#results" onclick="tmm()">Results</a>
+  <a href="#cta" onclick="tmm()" style="color:var(--neon)">Book Free Call</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><div class="logo-dot"></div>Clinic<em>Flow</em></div>
+  <div class="nav-right">
+    <a href="#problem" class="nav-link">Problem</a>
+    <a href="#solution" class="nav-link">Solution</a>
+    <a href="#how" class="nav-link">Process</a>
+    <a href="#cta" class="nav-cta"><span>Book Free Call</span></a>
+    <button class="hamburger" onclick="tmm()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hcorner tl"></div><div class="hcorner tr"></div>
+  <div class="hcorner bl"></div><div class="hcorner br"></div>
+  <div class="badge">Patient Growth OS &middot; v2.5 &middot; Active</div>
+  <h1>Build a <span class="hl">Predictable</span><br>Patient Flow System</h1>
+  <p class="hero-sub">We help clinics attract, convert, and manage patient leads using high-converting funnels, ads, and automated follow-up systems — engineered for consistent, measurable growth.</p>
+  <div class="hero-btns">
+    <a href="#cta" class="btn-p">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      Book Free Strategy Call
+    </a>
+    <a href="#how" class="btn-o">
+      View Process
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+    </a>
+  </div>
+  <div class="hstats">
+    <div class="hs"><span class="hs-n" id="s1">0+</span><span class="hs-l">Clinics Served</span></div>
+    <div class="hs"><span class="hs-n" id="s2">0×</span><span class="hs-l">Avg Inquiry Growth</span></div>
+    <div class="hs"><span class="hs-n" id="s3">0h</span><span class="hs-l">Setup Start</span></div>
+    <div class="hs"><span class="hs-n" id="s4">0%</span><span class="hs-l">Data Driven</span></div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="prob-sec" id="problem">
+  <div class="wrap">
+    <div class="slabel fu">System Diagnostics</div>
+    <h2 class="stitle fu">Inconsistent Patient Flow<br>is a System Problem</h2>
+    <p class="ssub fu">Most clinics run on luck, not infrastructure. If any of these sound familiar — you need a system, not just ads.</p>
+    <div class="prob-grid">
+      <div class="hc prob-card fu d1"><div class="cc tl"></div><div class="cc br"></div>
+        <span class="prob-ico">📉</span>
+        <h3>Unpredictable Appointments</h3>
+        <p>Some days full, some days empty. No way to forecast or control incoming patient volume — you're dependent on chance.</p>
+      </div>
+      <div class="hc prob-card fu d2"><div class="cc tl"></div><div class="cc br"></div>
+        <span class="prob-ico">💸</span>
+        <h3>Ads with Unclear ROI</h3>
+        <p>Budget spent on ads, results murky. You can't tell what's converting and what's wasted spend.</p>
+      </div>
+      <div class="hc prob-card fu d3"><div class="cc tl"></div><div class="cc br"></div>
+        <span class="prob-ico">🔕</span>
+        <h3>Leads That Don't Book</h3>
+        <p>Enquiries come in but never convert. Follow-up is manual, slow, inconsistent — patients disappear.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section id="solution">
+  <div class="wrap">
+    <div class="slabel fu">The Architecture</div>
+    <h2 class="stitle fu">A Structured System to Improve<br>Your Patient Bookings</h2>
+    <p class="ssub fu">Instead of random ads and walk-ins, we build a full-stack patient acquisition system — engineered from end to end.</p>
+    <div class="sol-grid">
+      <div class="sol-list">
+        <div class="hc sol-item fu d1"><div class="cc tl"></div><div class="sol-n">01</div><div><h4>Targeted Patient Inquiries</h4><p>Precision ad campaigns reaching patients actively searching for your services — not random scrollers.</p></div></div>
+        <div class="hc sol-item fu d2"><div class="cc tl"></div><div class="sol-n">02</div><div><h4>Improved Conversion Rate</h4><p>Optimised landing pages with persuasive copy and frictionless booking flows that turn interest into appointments.</p></div></div>
+        <div class="hc sol-item fu d3"><div class="cc tl"></div><div class="sol-n">03</div><div><h4>Automated Follow-Up</h4><p>WhatsApp + call sequences that respond instantly — even after hours — nurturing every lead to a booking.</p></div></div>
+        <div class="hc sol-item fu d4"><div class="cc tl"></div><div class="sol-n">04</div><div><h4>Performance Visibility</h4><p>Clear dashboards so you know exactly what's working and where every rupee goes.</p></div></div>
+      </div>
+      <div class="hc sys-diag fu d2"><div class="cc tl"></div><div class="cc br"></div>
+        <div class="sys-hdr"><div class="sdot r"></div><div class="sdot y"></div><div class="sdot g"></div><div class="sys-ttl">SYSTEM STATUS — LIVE</div></div>
+        <div class="sys-bdy">
+          <div style="font-family:var(--head);font-size:0.58rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1.1rem;text-transform:uppercase">Pipeline Performance</div>
+          <div class="sys-row"><div class="stag a">Attract</div><div class="sbar-w"><div class="sbar b1" data-w="80"></div></div><div class="spct">80%</div></div>
+          <div class="sys-row"><div class="stag c">Convert</div><div class="sbar-w"><div class="sbar b2" data-w="65"></div></div><div class="spct">65%</div></div>
+          <div class="sys-row"><div class="stag f">Follow-Up</div><div class="sbar-w"><div class="sbar b3" data-w="55"></div></div><div class="spct">55%</div></div>
+          <div class="sys-row"><div class="stag o">Optimise</div><div class="sbar-w"><div class="sbar b4" data-w="90"></div></div><div class="spct">90%</div></div>
+          <div class="inline-stats">
+            <div class="irow"><span class="ikey">LEADS THIS MONTH</span><span class="ival g">↑ 214</span></div>
+            <div class="irow"><span class="ikey">CONVERSION RATE</span><span class="ival b">38.2%</span></div>
+            <div class="irow"><span class="ikey">FOLLOW-UP SPEED</span><span class="ival y">&lt; 5 min</span></div>
+          </div>
+          <div class="sys-note">No guesswork. Just a clear, repeatable process.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-sec" id="how">
+  <div class="wrap">
+    <div class="slabel fu" style="justify-content:center">Operational Protocol</div>
+    <h2 class="stitle fu" style="text-align:center">Our Four-Phase Approach</h2>
+    <p class="ssub fu" style="text-align:center;margin:0 auto">From zero to optimised patient pipeline — four focused phases.</p>
+    <div class="steps">
+      <div class="step-line"></div>
+      <div class="step fu d1">
+        <div class="step-hex"><svg viewBox="0 0 50 50" fill="none"><polygon points="25,2 48,13.5 48,36.5 25,48 2,36.5 2,13.5" stroke="rgba(0,255,231,0.28)" stroke-width="1" fill="rgba(0,255,231,0.04)"/></svg><div class="step-hex-n">01</div></div>
+        <h3>Targeted Ads</h3>
+        <p>Precision campaigns on Meta and Google reaching patients actively searching for your specialty in your city.</p>
+      </div>
+      <div class="step fu d2">
+        <div class="step-hex"><svg viewBox="0 0 50 50" fill="none"><polygon points="25,2 48,13.5 48,36.5 25,48 2,36.5 2,13.5" stroke="rgba(0,255,231,0.28)" stroke-width="1" fill="rgba(0,255,231,0.04)"/></svg><div class="step-hex-n">02</div></div>
+        <h3>Landing Page</h3>
+        <p>A high-converting page built to capture and qualify leads — with trust signals, clear CTA, zero friction.</p>
+      </div>
+      <div class="step fu d3">
+        <div class="step-hex"><svg viewBox="0 0 50 50" fill="none"><polygon points="25,2 48,13.5 48,36.5 25,48 2,36.5 2,13.5" stroke="rgba(0,255,231,0.28)" stroke-width="1" fill="rgba(0,255,231,0.04)"/></svg><div class="step-hex-n">03</div></div>
+        <h3>Follow-Up System</h3>
+        <p>Automated WhatsApp + call sequences engage leads within minutes — day or night — driving them to book.</p>
+      </div>
+      <div class="step fu d4">
+        <div class="step-hex"><svg viewBox="0 0 50 50" fill="none"><polygon points="25,2 48,13.5 48,36.5 25,48 2,36.5 2,13.5" stroke="rgba(0,255,231,0.28)" stroke-width="1" fill="rgba(0,255,231,0.04)"/></svg><div class="step-hex-n">04</div></div>
+        <h3>Optimise</h3>
+        <p>Ongoing data analysis and A/B testing — your system gets smarter and more effective over time.</p>
+      </div>
+    </div>
+    <div class="disclaimer fu">
+      <span style="color:var(--neon);flex-shrink:0;margin-top:2px">⚡</span>
+      <div><strong>Realistic expectations:</strong> Results depend on factors like location, competition, and your team's response time. Our system is engineered to maximise your probability of success — not to promise numbers that may not reflect your market.</div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="wrap">
+    <div class="slabel fu">Outcome Metrics</div>
+    <h2 class="stitle fu">What Clinics Typically Experience</h2>
+    <p class="ssub fu">We don't overpromise. Here's what a well-implemented system delivers over time.</p>
+    <div class="res-grid">
+      <div class="hc res-card fu d1"><div class="cc tl"></div><div class="res-bar"></div><span class="res-ico">🎯</span><h3>Better Quality Inquiries</h3><p>More intent-driven patients, fewer time-wasters. Your staff focuses on people who actually want to book.</p></div>
+      <div class="hc res-card fu d2"><div class="cc tl"></div><div class="res-bar"></div><span class="res-ico">🔄</span><h3>Consistent Lead Flow</h3><p>A predictable stream of enquiries week after week — not random spikes after occasional posts.</p></div>
+      <div class="hc res-card fu d3"><div class="cc tl"></div><div class="res-bar"></div><span class="res-ico">📅</span><h3>Improved Booking Rate</h3><p>Faster follow-up and better nurturing means fewer dropped leads and more confirmed appointments.</p></div>
+      <div class="hc res-card fu d4"><div class="cc tl"></div><div class="res-bar"></div><span class="res-ico">📊</span><h3>Full Marketing Visibility</h3><p>Clear dashboards showing what's performing so every rupee spent is accountable and measurable.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust-sec">
+  <div class="wrap">
+    <div class="slabel fu">Trust Protocol</div>
+    <h2 class="stitle fu">Honest Over Hype</h2>
+    <div class="trust-lay">
+      <div class="tq-wrap fu">
+        <p class="tquote">"We don't guarantee unrealistic numbers — we focus on building systems that work in the long run. Top agencies say <em>we improve</em> and <em>we optimise</em> — never 'guaranteed 3× patients in 30 days'."</p>
+        <div class="tbadge"><div class="logo-dot" style="width:5px;height:5px"></div>Verified Approach</div>
+      </div>
+      <div class="tpts fu d2">
+        <div class="tp"><div class="tpdot"></div><p>Every decision is backed by <strong>real data</strong>, not gut feeling or guesswork</p></div>
+        <div class="tp"><div class="tpdot"></div><p>Upfront about what affects results — <strong>location, competition, response time</strong></p></div>
+        <div class="tp"><div class="tpdot"></div><p>Systems built for <strong>compounding returns</strong>, not short-term vanity metrics</p></div>
+        <div class="tp"><div class="tpdot"></div><p>We earn trust through <strong>consistent performance</strong>, not pressure tactics</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec" id="cta">
+  <div class="cta-glow"></div>
+  <div class="cta-ring"></div><div class="cta-ring"></div><div class="cta-ring"></div>
+  <div style="position:relative;z-index:2">
+    <div class="slabel fu" style="justify-content:center">Initialize Growth System</div>
+    <h2 class="stitle fu">Let's Build a System That<br>Works for Your Clinic</h2>
+    <p class="ssub fu">Book a free 30-minute strategy call. We'll audit your current setup and map out exactly what a patient growth system looks like for you.</p>
+    <div class="cta-btns">
+      <a href="tel:+91XXXXXXXXXX" class="btn-p fu d1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Book Free Call
+      </a>
+      <a href="https://wa.me/91XXXXXXXXXX" class="btn-wa fu d2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.553 4.117 1.524 5.854L0 24l6.318-1.501A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 01-5.032-1.388l-.36-.215-3.75.891.931-3.651-.234-.375A9.818 9.818 0 1112 21.818z"/></svg>
+        WhatsApp Us
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo logo"><div class="logo-dot"></div>Clinic<em style="color:var(--neon);font-style:normal">Flow</em></div>
+  <p>© 2025 ClinicFlow &middot; Patient Growth OS &middot; All systems operational</p>
+</footer>
+
+<script>
+// PARTICLE CANVAS
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
+let W,H,pts=[];
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+rsz();addEventListener('resize',()=>{rsz();init()});
+function init(){
+  pts=[];
+  const n=Math.min(90,Math.floor(W*H/10000));
+  for(let i=0;i<n;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.4,o:Math.random()*.45+.08});
+}
+init();
+function drawBg(){
+  cx.clearRect(0,0,W,H);
+  // grid
+  cx.strokeStyle='rgba(0,255,231,0.025)';cx.lineWidth=1;
+  for(let x=0;x<W;x+=65){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke()}
+  for(let y=0;y<H;y+=65){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke()}
+  // particles + connections
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(0,255,231,${p.o})`;cx.fill();
+  });
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<130){cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.strokeStyle=`rgba(0,255,231,${(1-d/130)*.07})`;cx.lineWidth=.5;cx.stroke()}
+    }
+  }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// SCROLL
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');obs.unobserve(x.target)}})},{threshold:.1});
+document.querySelectorAll('.fu').forEach(el=>obs.observe(el));
+
+// BARS
+const barObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.sbar').forEach(b=>{b.style.width=b.dataset.w+'%'});barObs.unobserve(x.target)}})},{threshold:.3});
+const diag=document.querySelector('.sys-diag');
+if(diag)barObs.observe(diag);
+
+// MOBILE MENU
+function tmm(){document.getElementById('mm').classList.toggle('open')}
+
+// COUNTER
+function cnt(el,to,sfx){
+  let c=0,s=to/55;
+  const t=setInterval(()=>{c+=s;if(c>=to){c=to;clearInterval(t)}el.textContent=Math.floor(c)+sfx;},18);
+}
+const heroObs=new IntersectionObserver(e=>{
+  e.forEach(x=>{
+    if(x.isIntersecting){
+      cnt(document.getElementById('s1'),50,'+');
+      cnt(document.getElementById('s3'),48,'h');
+      cnt(document.getElementById('s4'),100,'%');
+      let v=0,t=setInterval(()=>{v+=.05;if(v>=3){v=3;clearInterval(t)}document.getElementById('s2').textContent=v.toFixed(1)+'×';},25);
+      heroObs.disconnect();
+    }
+  });
+},{threshold:.5});
+heroObs.observe(document.querySelector('.hstats'));
+</script>
+</body>
+</html>
